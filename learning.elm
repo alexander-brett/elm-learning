@@ -1,6 +1,6 @@
 import Html exposing (..)
 import Html.App as Html
-import Html.Events exposing (onInput, onClick)
+import Html.Events exposing (onClick)
 import Basics exposing (..)
 import List exposing (map)
 import Svg exposing (..)
@@ -53,7 +53,7 @@ distance : Coord -> Coord -> Float
 distance start end =
     sqrt <| (start.x - end.x)*(start.x - end.x) + (start.y - end.y)*(start.y - end.y)
 
-generator = Random.pair (Random.float -240 240) (Random.float -240 240)
+generator = Random.pair (Random.float 0 490) (Random.float 0 490)
 
 makeGhost : (Float, Float) -> Ghost
 makeGhost (a,b) =
@@ -89,8 +89,7 @@ view model =
             [ version "1.1"
             , height "490"
             , width "490"
-            , Svg.Attributes.style "transform:translate(245px,245px)"    ]
-            [ rect [x "0", y "0", width "10", height "10", fill "black"] []
-            ] ++ List.map ghostToRect model.ghosts
-            
+            ]
+            ( rect [x "240", y "240", width "10", height "10", fill "black"] []
+             :: List.map ghostToRect model.ghosts )            
         ] 
