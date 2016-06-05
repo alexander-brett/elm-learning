@@ -9,7 +9,13 @@ import Random exposing (..)
 
 
 main =
-  Html.beginnerProgram { model = model, view = view, update = update }
+  Html.program
+    { init = init
+    , view = view
+    , update = update
+    , subscriptions = subscriptions
+    }
+
 
 tileSize = 10
 
@@ -28,59 +34,63 @@ type alias Player =
     }
 
 type alias Model = 
-    { ghosts : List(Ghost)
+    { ghosts : List Ghost
     , player : Player
     }
+
+init = ({ ghosts = []
+        , player =
+          { viewPower = 0
+          , position =
+            { x = 0
+            , y = 0
+            }
+          }
+        }, Random.generate SetGhosts <| makeGhosts 5
+        )
 
 distance : Coord -> Coord -> Float
 distance start end =
     sqrt <| (start.x - end.x)*(start.x - end.x) + (start.y - end.y)*(start.y - end.y)
 
-generator = Random.pair (Random.int -240, 240) (Random.int -240, 240)
+generator = Random.pair (Random.float -240 240) (Random.float -240 240)
 
-makeGhost : (Int, Int) -> Ghost
+makeGhost : (Float, Float) -> Ghost
 makeGhost (a,b) =
-    { position =
+    Ghost
         { x = a
-        , y = x}
-    }
+        , y = b}
+    
 
-makeGhosts : Int -> List(Ghost)
+makeGhosts : Int -> Generator (List Ghost)
 makeGhosts num = 
-    List.map makeGhost (Random.list num generator)
+    Random.map (\l -> List.map makeGhost l) (Random.list num generator)
 
-model =
-    { ghosts = []
-    , player =
-        { viewPower = 0
-        , position =
-            { x = 0
-            , y = 0
-            }
-        }
-    }
 
-type alias Msg = {}
+subscriptions : Model -> Sub Msg
+subscriptions model =
+  Sub.none
 
-update : Msg -> Model -> Model
-update msg model = 
-    model
-
-makeViewBox =
-     "0 0 " ++ (toString <| tileSize*49) ++ " " ++ (toString <| tileSize*49)
+type Msg = 
+  SetGhosts (List Ghost)
+  
+update : Msg -> Model -> (Model, Cmd Msg)
+update msg model =
+  case msg of
+    SetGhosts ghosts -> ({ model | ghosts = ghosts}, Cmd.none)
 
 ghostToRect ghost =
-    rect [x (toString ghost.position.x), y (toString ghost.postition.y), height "10", width "10", fill "red"] []
+    rect [x (toString ghost.position.x), y (toString ghost.position.y), height "10", width "10", fill "red"] []
 
 view : Model -> Html Msg
 view model =
-    div [] 
+      div [] 
         [ Svg.svg
             [ version "1.1"
             , height "490"
             , width "490"
             , Svg.Attributes.style "transform:translate(245px,245px)"    ]
             [ rect [x "0", y "0", width "10", height "10", fill "black"] []
-            , List.map ghostToRect <| makeGhosts 5
-            ]
-        ]
+            ] ++ List.map ghostToRect model.ghosts
+            
+        ] 
